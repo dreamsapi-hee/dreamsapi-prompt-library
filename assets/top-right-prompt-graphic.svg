@@ -1,0 +1,27 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 180" aria-hidden="true">
+  <defs>
+    <linearGradient id="cardA" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#eef8ff"/>
+      <stop offset="1" stop-color="#f6efff"/>
+    </linearGradient>
+    <linearGradient id="cardB" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#fff7df"/>
+      <stop offset="1" stop-color="#eaf8f7"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-30%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#315670" flood-opacity="0.13"/>
+    </filter>
+  </defs>
+  <rect width="360" height="180" fill="none"/>
+  <g filter="url(#soft)" opacity="0.92">
+    <rect x="112" y="28" width="150" height="94" rx="18" fill="url(#cardA)" stroke="#b8d7df" stroke-width="3"/>
+    <rect x="76" y="58" width="132" height="82" rx="16" fill="url(#cardB)" stroke="#d8c8aa" stroke-width="3"/>
+    <rect x="126" y="52" width="86" height="10" rx="5" fill="#3d6f8f" opacity="0.78"/>
+    <rect x="126" y="75" width="104" height="8" rx="4" fill="#7ea7bf" opacity="0.45"/>
+    <rect x="126" y="94" width="72" height="8" rx="4" fill="#7ea7bf" opacity="0.35"/>
+    <circle cx="252" cy="52" r="13" fill="#f6d36c" opacity="0.9"/>
+    <path d="M272 96c17-9 32-8 46 3" fill="none" stroke="#7ea7bf" stroke-width="6" stroke-linecap="round" opacity="0.45"/>
+    <path d="M68 38l8 15 16 7-16 7-8 15-8-15-16-7 16-7 8-15Z" fill="#f6d36c" opacity="0.68"/>
+    <path d="M294 38l5 9 10 4-10 4-5 9-5-9-10-4 10-4 5-9Z" fill="#d8c4ea" opacity="0.76"/>
+  </g>
+</svg>
