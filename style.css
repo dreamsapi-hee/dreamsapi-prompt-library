@@ -1859,3 +1859,44 @@ body.dark .tag {
   }
 }
 
+
+
+/* Fixed top practice categories: 실습A-D */
+.section-button.is-practice-category {
+  background: linear-gradient(135deg, #ffe6a8 0%, #fff4d6 58%, #e9f7f3 100%);
+  border-color: #d99a1f;
+  color: #102033;
+  box-shadow: 0 12px 24px rgba(181, 129, 32, 0.13);
+  font-weight: 950;
+}
+
+.section-button.is-practice-category:hover,
+.section-button.is-practice-category.is-active {
+  background: linear-gradient(135deg, #ffd46e 0%, #ffefbf 54%, #dff3ee 100%);
+  border-color: #b87512;
+  color: #102033;
+  box-shadow: 0 0 0 3px rgba(217, 154, 31, 0.18), 0 16px 30px rgba(181, 129, 32, 0.18);
+}
+
+body.dark .section-button.is-practice-category {
+  background: linear-gradient(135deg, #4b3511 0%, #3b3321 58%, #18322e 100%);
+  border-color: #b98222;
+  color: #fff8e5;
+}
+
+
+
+.detail-meta-values {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.detail-meta-values span {
+  display: block;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}

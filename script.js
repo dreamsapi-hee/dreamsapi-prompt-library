@@ -2,9 +2,9 @@
 // spreadsheetId와 gid만 넣으면 앱이 공개 CSV 주소를 자동으로 만들어 읽습니다.
 // 시트가 "링크가 있는 모든 사용자 보기" 또는 "웹에 게시" 상태여야 브라우저에서 읽을 수 있습니다.
 const googleSheet = {
-  spreadsheetId: "14SmKvoD8cQ63VM1Tn6JiyYWcoJY0dV8MML87x92Rumk",
-  promptSheet: "PromptMaster",
-  structureSheet: "CourseStructure",
+  spreadsheetId: "1sg4e7hfv52QhDkkjn8fMLYwuC7HqTpev",
+  promptSheet: "App_Prompts",
+  structureSheet: "Category_Map",
   courseTitle: "요즘 이미지 AI, 어디까지 써야 할까?"
 };
 
@@ -137,7 +137,7 @@ async function loadData() {
 
     if (promptData.rows.length > 0 && state.rows.length === 0) {
       state.error = true;
-      state.errorMessage = "CSV는 열렸지만 표시할 행이 없습니다. status 값이 있다면 '공개'인지 확인해 주세요.";
+      state.errorMessage = "CSV는 열렸지만 표시할 행이 없습니다. public 값이 YES인지 확인해 주세요.";
     }
   } catch (error) {
     console.error(error);
@@ -169,8 +169,8 @@ async function loadSheetData(sheetName = googleSheet.promptSheet) {
 function buildSectionMeta(rows) {
   const meta = new Map();
   rows.forEach((row) => {
-    const label = pick(row, ["section_title", "section", "섹션명", "섹션"]);
-    const order = pick(row, ["section_order", "order", "순서"]);
+    const label = pick(row, ["category", "category_title", "카테고리", "카테고리명", "section_title", "section", "섹션명", "섹션"]);
+    const order = pick(row, ["category_order", "section_order", "order", "순서"]);
     const key = getSectionKey(label);
     if (key && !meta.has(key)) {
       meta.set(key, {
@@ -310,31 +310,44 @@ function parseCsv(text) {
   };
 }
 
-function normalizeRow(row) {
+function normalizeRow(row, options = {}) {
   const courseTitle = pick(row, ["course_title", "course", "코스", "코스명"]) || googleSheet.courseTitle;
-  const section = pick(row, ["section", "section_title", "섹션", "섹션명"]);
+  const section = pick(row, ["category", "category_title", "카테고리", "카테고리명", "section", "section_title", "섹션", "섹션명"]);
   const title = pick(row, ["prompt_title", "title", "goal", "프롬프트 제목", "목표"]);
   const desc = pick(row, ["short_desc", "description", "desc", "설명", "짧은 설명"]);
-  const promptBody = pick(row, ["prompt_ko", "prompt", "prompt_text", "body", "본문", "프롬프트"]);
+  const inputPlace = pick(row, ["input_place", "inputPlace", "input", "입력 위치", "입력위치"]);
+  const promptBody = pick(row, ["copy_text", "copyText", "copy", "복사문구", "복사 텍스트", "prompt_ko", "prompt", "prompt_text", "body", "본문", "프롬프트"]);
   const tool = pick(row, ["tool", "tools", "도구"]);
   const rawPromptId = pick(row, ["prompt_id", "id"]);
+  const practiceSet = pick(row, ["set_id", "setId", "practice_set", "practiceSet", "practice", "set", "group", "variant", "button", "실습세트", "세트", "그룹"]);
+  const setTitle = pick(row, ["set_title", "setTitle", "세트 제목", "세트제목"]);
+  const stepOrder = pick(row, ["step_order", "stepOrder", "step", "순서", "단계 순서", "단계순서"]);
+  const stepName = pick(row, ["step_name", "stepName", "단계명", "스텝명"]);
 
   return {
     course_id: pick(row, ["course_id", "id"]),
     course_title: courseTitle || "이름 없는 코스",
-    section: section || "섹션 없음",
-    section_order: pick(row, ["section_order", "order", "순서"]),
+    section: section || "카테고리 없음",
+    section_order: pick(row, ["category_order", "section_order", "order", "순서"]),
     prompt_id: rawPromptId || makeStableId(courseTitle, section, title, desc),
     display_id: rawPromptId,
     prompt_title: title || section || "제목 없는 프롬프트",
     short_desc: desc,
+    input_place: inputPlace,
     prompt_ko: promptBody || desc || title || "",
+    copy_text: promptBody || "",
+    practice_set: practiceSet,
+    set_title: setTitle,
+    step_order: stepOrder,
+    step_name: stepName,
     tool,
     ratio: pick(row, ["ratio", "비율"]),
     level: pick(row, ["level", "난이도"]),
     use_type: pick(row, ["use_type", "type", "용도"]),
     is_representative: pick(row, ["is_representative", "representative", "대표 실습", "대표"]),
-    status: pick(row, ["status", "상태"])
+    status: pick(row, ["status", "상태"]),
+    public: pick(row, ["public", "is_public", "visible", "publish", "공개여부", "공개"]),
+    public_default: pick(row, ["public_default", "publicDefault", "default_public", "기본공개", "공개기본값"])
   };
 }
 
@@ -343,17 +356,42 @@ function pick(row, keys) {
     const value = clean(row[key]);
     if (value) return value;
   }
+
+  const normalizedEntries = Object.entries(row).map(([key, value]) => [normalizeLookupKey(key), value]);
+  for (const key of keys) {
+    const normalizedKey = normalizeLookupKey(key);
+    const found = normalizedEntries.find(([entryKey]) => entryKey === normalizedKey);
+    const value = clean(found?.[1]);
+    if (value) return value;
+  }
   return "";
 }
 
 function clean(value) {
-  return String(value ?? "").trim();
+  return String(value ?? "").replace(/^\uFEFF/, "").trim();
+}
+
+function normalizeLookupKey(value) {
+  return clean(value).toLocaleLowerCase("ko").replace(/[\s_-]+/g, "");
 }
 
 function isPublicRow(row) {
-  return !row.status || row.status === "공개";
+  const publicValue = clean(row.public);
+  if (publicValue) return isYesValue(publicValue);
+
+  const defaultValue = clean(row.public_default);
+  if (defaultValue) return isYesValue(defaultValue);
+
+  const status = clean(row.status);
+  if (status) return status === "공개" || isYesValue(status);
+
+  return true;
 }
 
+function isYesValue(value) {
+  const key = normalizeLookupKey(value);
+  return ["yes", "y", "true", "1", "ok", "on", "공개", "표시", "게시"].includes(key);
+}
 function getSectionKey(value) {
   const text = clean(value);
   const match = text.match(/^\s*(\d+\s*부)/);
@@ -363,6 +401,11 @@ function getSectionKey(value) {
 function getSectionDisplayName(section) {
   const meta = state.sectionMeta.get(getSectionKey(section));
   return meta?.label || section;
+}
+
+function isPracticeSetSection(section) {
+  const key = getSectionKey(section).toLocaleLowerCase("ko").replace(/[\s-]+/g, "_");
+  return key === "practice_set";
 }
 
 function makeStableId(...parts) {
@@ -398,6 +441,7 @@ function hydrateInitialSelection() {
     state.selectedSection = sections[0]?.name || "";
   }
 
+
   const promptIds = getFilteredPrompts().map((prompt) => prompt.prompt_id);
   if (state.selectedPromptId && !promptIds.includes(state.selectedPromptId)) {
     state.selectedPromptId = "";
@@ -416,28 +460,50 @@ function getSectionsForCourse(courseTitle) {
   const sectionMap = new Map();
 
   state.rows
-    .filter((row) => row.course_title === courseTitle)
-    .forEach((row) => {
-      if (!sectionMap.has(row.section)) {
-        const meta = state.sectionMeta.get(getSectionKey(row.section));
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => row.course_title === courseTitle && !isPracticeSetSection(row.section))
+    .forEach(({ row, index }) => {
+      const meta = state.sectionMeta.get(getSectionKey(row.section));
+      const promptOrder = getPromptOrderNumber(row);
+      const fallbackOrder = Number.isFinite(meta?.order) ? meta.order : Number.parseFloat(row.section_order);
+      const rowOrder = Number.isFinite(promptOrder) ? promptOrder : fallbackOrder;
+      const existing = sectionMap.get(row.section);
+
+      if (!existing) {
         sectionMap.set(row.section, {
           name: row.section,
           label: getSectionDisplayName(row.section),
-          order: Number.isFinite(meta?.order) ? meta.order : Number.parseFloat(row.section_order)
+          order: rowOrder,
+          firstIndex: index
         });
+        return;
+      }
+
+      const existingHasOrder = Number.isFinite(existing.order);
+      const rowHasOrder = Number.isFinite(rowOrder);
+      if ((rowHasOrder && !existingHasOrder) || (rowHasOrder && rowOrder < existing.order)) {
+        existing.order = rowOrder;
+        existing.firstIndex = index;
       }
     });
 
   return [...sectionMap.values()].sort((a, b) => {
+    const aPractice = getPracticeCategoryRank(a.name);
+    const bPractice = getPracticeCategoryRank(b.name);
+    const aIsPractice = Number.isFinite(aPractice);
+    const bIsPractice = Number.isFinite(bPractice);
+    if (aIsPractice && bIsPractice) return aPractice - bPractice;
+    if (aIsPractice) return -1;
+    if (bIsPractice) return 1;
+
     const aHasOrder = Number.isFinite(a.order);
     const bHasOrder = Number.isFinite(b.order);
-    if (aHasOrder && bHasOrder) return a.order - b.order || a.name.localeCompare(b.name, "ko");
+    if (aHasOrder && bHasOrder) return a.order - b.order || a.firstIndex - b.firstIndex;
     if (aHasOrder) return -1;
     if (bHasOrder) return 1;
-    return a.name.localeCompare(b.name, "ko");
+    return a.firstIndex - b.firstIndex || a.name.localeCompare(b.name, "ko");
   });
 }
-
 function getFilteredPrompts() {
   const query = state.query.toLocaleLowerCase("ko");
   return state.rows
@@ -445,13 +511,24 @@ function getFilteredPrompts() {
     .filter(({ row }) => {
       const inCourse = row.course_title === state.selectedCourse;
       const inSection = state.query ? true : row.section === state.selectedSection;
-      const matchesQuery = !query || `${row.prompt_title} ${row.short_desc}`.toLocaleLowerCase("ko").includes(query);
+      const matchesQuery = !query || `${row.prompt_title} ${row.short_desc} ${row.input_place}`.toLocaleLowerCase("ko").includes(query);
       return inCourse && inSection && matchesQuery;
     })
     .sort((a, b) => comparePromptOrder(a, b))
     .map(({ row }) => row);
 }
 
+
+function getPracticeCategoryRank(section) {
+  const key = normalizeLookupKey(section);
+  const match = key.match(/^실습([abcd])/i);
+  if (!match) return Number.NaN;
+  return { a: 0, b: 1, c: 2, d: 3 }[match[1].toLocaleLowerCase("ko")];
+}
+
+function isPracticeCategory(section) {
+  return Number.isFinite(getPracticeCategoryRank(section));
+}
 function comparePromptOrder(a, b) {
   const aNumber = getPromptOrderNumber(a.row);
   const bNumber = getPromptOrderNumber(b.row);
@@ -463,7 +540,9 @@ function comparePromptOrder(a, b) {
   if (bHasNumber) return 1;
   return a.index - b.index;
 }
-
+function isPracticePrompt(prompt) {
+  return false;
+}
 function getPromptOrderNumber(prompt) {
   const candidates = [prompt.prompt_id, prompt.id, prompt.prompt_title, prompt.short_desc];
   for (const value of candidates) {
@@ -532,7 +611,7 @@ function renderSections() {
   sections.forEach((section) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `section-button${section.name === state.selectedSection ? " is-active" : ""}`;
+    button.className = `section-button${isPracticeCategory(section.name) ? " is-practice-category" : ""}${section.name === state.selectedSection ? " is-active" : ""}`;
     button.innerHTML = `<span>${escapeHtml(section.label || section.name)}</span>`;
     button.addEventListener("click", () => {
       state.selectedSection = section.name;
@@ -547,6 +626,7 @@ function renderSections() {
   });
 }
 
+
 function renderPrompts() {
   const prompts = getFilteredPrompts();
   const hasRows = state.rows.length > 0;
@@ -556,10 +636,11 @@ function renderPrompts() {
   els.promptList.classList.toggle("is-hidden", state.loading || state.error || isEmpty);
   els.emptyState.classList.toggle("is-hidden", !isEmpty);
   els.courseKicker.textContent = state.selectedCourse || "과정";
-  els.sectionTitle.textContent = state.query ? "검색 결과" : getSectionDisplayName(state.selectedSection) || "프롬프트";
+  const sectionLabel = getSectionDisplayName(state.selectedSection) || "프롬프트";
+  els.sectionTitle.textContent = state.query ? "검색 결과" : sectionLabel;
   els.resultCount.textContent = `${prompts.length}개`;
   els.emptyState.querySelector("p").textContent = hasRows
-    ? "검색어를 바꾸거나 다른 섹션을 선택해 보세요."
+    ? "검색어를 바꾸거나 다른 카테고리를 선택해 보세요."
     : "표시할 프롬프트가 아직 없습니다.";
 
   prompts.forEach((prompt) => {
@@ -569,7 +650,7 @@ function renderPrompts() {
     card.innerHTML = `
       <div class="card-top">
         <div>
-          <h3>${escapeHtml(formatPromptTitle(prompt))}</h3>
+          <h3>${escapeHtml(prompt.prompt_title || "제목 없는 프롬프트")}</h3>
           ${prompt.short_desc ? `<p>${escapeHtml(prompt.short_desc)}</p>` : ""}
         </div>
         ${isRepresentative(prompt) ? `<span class="badge">대표 실습</span>` : ""}
@@ -601,7 +682,10 @@ function renderDetail() {
   if (!prompt) return;
 
   els.detailTitle.textContent = formatPromptTitle(prompt);
-  els.detailDesc.textContent = prompt.short_desc || "설명이 없는 프롬프트입니다.";
+  const promptMeta = [prompt.display_id, prompt.input_place].filter(Boolean);
+  els.detailDesc.innerHTML = promptMeta.length
+    ? `<div class="detail-meta-values">${promptMeta.map((value) => `<span>${escapeHtml(value)}</span>`).join("")}</div>`
+    : escapeHtml(prompt.short_desc || "입력 위치 정보가 없습니다.");
   els.detailTags.innerHTML = "";
   [prompt.tool, prompt.ratio, prompt.level, prompt.use_type].filter(Boolean).forEach((tag) => {
     const span = document.createElement("span");
@@ -610,9 +694,9 @@ function renderDetail() {
     els.detailTags.append(span);
   });
   els.detailRepresentative.classList.toggle("is-hidden", !isRepresentative(prompt));
-  els.detailPrompt.textContent = prompt.prompt_ko || "프롬프트 본문이 비어 있습니다.";
+  const promptBody = prompt.copy_text || prompt.prompt_ko || "복사할 텍스트가 비어 있습니다.";
+  els.detailPrompt.textContent = promptBody;
 }
-
 function bindSidebarResizer() {
   if (!els.sidebarResizer) return;
 
@@ -752,10 +836,10 @@ async function copySelectedPrompt() {
   if (!prompt) return;
 
   try {
-    await navigator.clipboard.writeText(prompt.prompt_ko);
+    await navigator.clipboard.writeText(prompt.copy_text || prompt.prompt_ko);
   } catch {
     const textarea = document.createElement("textarea");
-    textarea.value = prompt.prompt_ko;
+    textarea.value = prompt.copy_text || prompt.prompt_ko;
     document.body.append(textarea);
     textarea.select();
     document.execCommand("copy");
@@ -790,14 +874,14 @@ function setTheme(theme) {
 function readHashState() {
   const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   state.selectedCourse = params.get("course") || state.selectedCourse;
-  state.selectedSection = params.get("section") || state.selectedSection;
+  state.selectedSection = params.get("category") || params.get("section") || state.selectedSection;
   state.selectedPromptId = params.get("prompt") || state.selectedPromptId;
 }
 
 function updateHash() {
   const params = new URLSearchParams();
   if (state.selectedCourse) params.set("course", state.selectedCourse);
-  if (state.selectedSection) params.set("section", state.selectedSection);
+  if (state.selectedSection) params.set("category", state.selectedSection);
   if (state.selectedPromptId) params.set("prompt", state.selectedPromptId);
   history.replaceState(null, "", `#${params.toString()}`);
 }
@@ -810,6 +894,46 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

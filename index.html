@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Dreamsapi Prompt Library</title>
     <meta name="description" content="수업을 위한 프롬프트 아카이브">
-    <link rel="stylesheet" href="./style.css?v=20260702-28">
+    <link rel="stylesheet" href="./style.css?v=20260719-35">
   </head>
   <body>
     <div class="app-shell">
       <header class="app-header">
-        <button class="icon-button sidebar-open" id="openSidebar" type="button" aria-label="섹션 열기">
+        <button class="icon-button sidebar-open" id="openSidebar" type="button" aria-label="카테고리 열기">
           <span></span>
           <span></span>
           <span></span>
@@ -35,17 +35,16 @@
       </header>
 
       <div class="workspace">
-        <aside class="section-sidebar" id="sectionSidebar" aria-label="섹션">
+        <aside class="section-sidebar" id="sectionSidebar" aria-label="카테고리">
           <div class="course-row" aria-label="과정 선택"><button class="course-button" type="button" aria-hidden="true">과정명</button><label class="field course-field" for="courseSelect"><span class="sr-only">과정명 선택</span><select id="courseSelect" aria-label="과정명 선택"></select></label></div>
           <div class="sidebar-head">
             <div>
-              <p class="eyebrow">Course Menu</p>
+              <p class="eyebrow">Category Menu</p>
               <h2 id="courseMenuTitle">과정 메뉴</h2>
             </div>
             <button class="text-button sidebar-close" id="closeSidebar" type="button">닫기</button>
           </div>
-          <nav class="section-list" id="sectionList"></nav>
-        </aside>
+          <nav class="section-list" id="sectionList"></nav>        </aside>
 
         <div class="sidebar-resizer" id="sidebarResizer" role="separator" aria-label="왼쪽 영역 폭 조절" aria-orientation="vertical" tabindex="0"></div>
 
@@ -66,7 +65,7 @@
 
             <div class="state-box is-hidden" id="emptyState">
               <h3>결과가 없습니다</h3>
-              <p>과정을 선택하면 왼쪽에 섹션이 보입니다.</p>
+              <p>과정을 선택하면 왼쪽에 카테고리가 보입니다.</p>
             </div>
 
             <div class="state-box is-hidden" id="errorState">
@@ -111,9 +110,46 @@
     <div class="mobile-backdrop" id="mobileBackdrop"></div>
     <div class="toast" id="toast" role="status" aria-live="polite">프롬프트를 복사했어요</div>
 
-    <script src="./script.js?v=20260702-28"></script>
+    <script src="./script.js?v=20260719-35"></script>
   </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
