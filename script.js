@@ -5,7 +5,7 @@ const googleSheet = {
   spreadsheetId: "1sg4e7hfv52QhDkkjn8fMLYwuC7HqTpev",
   promptSheet: "App_Prompts",
   structureSheet: "Category_Map",
-  courseTitle: "요즘 이미지 AI, 어디까지 써야 할까?"
+  courseTitle: "Google Flow 이미지 제작 실전"
 };
 
 // 직접 만든 공개 CSV 주소가 있다면 prompts에 넣어 주세요. prompts 값이 있으면 이 주소를 우선 사용합니다.
@@ -894,6 +894,7 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
 
 
 
